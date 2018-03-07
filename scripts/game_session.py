@@ -67,13 +67,13 @@ class GameSession:
 
             stimulus_block_history.extend(pairs)
 
-        stimulus_block_history = [i for i in stimulus_block_history if i != 0]
+        stimulus_block_history = list(filter(lambda x: x != 0, stimulus_block_history))
         self.stimulus_history.extend(stimulus_block_history)
 
     def _give_rewards(self):
         probability_of_reward = [0.8, 0.2, 0.7, 0.3, 0.6, 0.4]
         for i, action in enumerate(self.action_history):
-            index = i%30
+            index = i%self.cycle_number
             if i%self.cycle_number == 0:
                 RewardsGrantedA = [0] * self.cycle_number
                 RewardsGrantedB = [0] * self.cycle_number
@@ -82,23 +82,41 @@ class GameSession:
                 RewardsGrantedE = [0] * self.cycle_number
                 RewardsGrantedF = [0] * self.cycle_number
                 RewardsGrantedA[1:floor(self.cycle_number * probability_of_reward[0])] \
-                    = [1] * floor(self.cycle_number * probability_of_reward[0])
+                    = [1] * (floor(self.cycle_number * probability_of_reward[0])-1)
                 RewardsGrantedB[1:floor(self.cycle_number * probability_of_reward[1])] \
-                    = [1] * floor(self.cycle_number * probability_of_reward[1])
+                    = [1] * (floor(self.cycle_number * probability_of_reward[1])-1)
                 RewardsGrantedC[1:floor(self.cycle_number * probability_of_reward[2])] \
-                    = [1] * floor(self.cycle_number * probability_of_reward[2])
+                    = [1] * (floor(self.cycle_number * probability_of_reward[2])-1)
                 RewardsGrantedD[1:floor(self.cycle_number * probability_of_reward[3])] \
-                    = [1] * floor(self.cycle_number * probability_of_reward[3])
+                    = [1] * (floor(self.cycle_number * probability_of_reward[3])-1)
                 RewardsGrantedE[1:floor(self.cycle_number * probability_of_reward[4])] \
-                    = [1] * floor(self.cycle_number * probability_of_reward[4])
+                    = [1] * (floor(self.cycle_number * probability_of_reward[4])-1)
                 RewardsGrantedF[1:floor(self.cycle_number * probability_of_reward[5])] \
-                    = [1] * floor(self.cycle_number * probability_of_reward[5])
+                    = [1] * (floor(self.cycle_number * probability_of_reward[5])-1)
                 RewardsGranted = np.zeros((2, self.training_cycle_length * self.cycle_number))
-                stimulus_block_history = self.stimulus_history[30*index : 30*(index+1)-1]
+                stimulus_block_history = self.stimulus_history[30*index : 30*(index+1)]
 
-                # TODO
+                RewardsGrantedA = np.reshape(np.array(RewardsGrantedA), (1,len(RewardsGrantedA)))
+                RewardsGrantedB = np.reshape(np.array(RewardsGrantedB), (1,len(RewardsGrantedB)))
+                RewardsGrantedC = np.reshape(np.array(RewardsGrantedC), (1,len(RewardsGrantedC)))
+                RewardsGrantedD = np.reshape(np.array(RewardsGrantedD), (1,len(RewardsGrantedD)))
+                RewardsGrantedE = np.reshape(np.array(RewardsGrantedE), (1,len(RewardsGrantedE)))
+                RewardsGrantedF = np.reshape(np.array(RewardsGrantedF), (1,len(RewardsGrantedF)))
+
                 for stimulus_set in stimulus_block_history:
-                    pass
+                    idx = np.array(
+                        [index for index, value in enumerate(stimulus_block_history) if value == stimulus_set])
+                    random_indexes = np.random.choice(self.cycle_number, (1, self.cycle_number),False)
+                    random_indexes = random_indexes[0]
+                    if stimulus_set == 1:
+                        RewardsGranted[0, idx] = RewardsGrantedA[0, random_indexes]
+                        RewardsGranted[1, idx] = RewardsGrantedB[0, random_indexes]
+                    elif stimulus_set == 2:
+                        RewardsGranted[0, idx] = RewardsGrantedC[0, random_indexes]
+                        RewardsGranted[1, idx] = RewardsGrantedD[0, random_indexes]
+                    elif stimulus_set == 3:
+                        RewardsGranted[0, idx] = RewardsGrantedE[0, random_indexes]
+                        RewardsGranted[1, idx] = RewardsGrantedF[0, random_indexes]
 
                 self.RewardsGranted = RewardsGranted
 
