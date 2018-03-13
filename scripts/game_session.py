@@ -5,7 +5,7 @@ from math import floor
 
 import pandas as pd
 
-from scripts.player import Player, ModelAsPlayer
+from scripts.player import Player,ModelAsPlayer
 
 
 class GameSession:
@@ -20,11 +20,11 @@ class GameSession:
         self.correct_action_history = []
         self.reward_history = []
         self.better_stimulus = []
-        self.player = player
+        self.player = player(self.game_skeleton)
 
     def play(self):
         self._create_game_skeleton()
-        self.action_history = self.player.decide(self.game_skeleton)
+        self.action_history = self.player.decide()
         self._give_rewards()
 
     def _create_game_skeleton(self):
@@ -161,6 +161,6 @@ class GameSession:
 
 
 if __name__ == '__main__':
-    game = GameSession(player=ModelAsPlayer())
+    game = GameSession(player=ModelAsPlayer([]))
     game.play()
     game.save_results()
