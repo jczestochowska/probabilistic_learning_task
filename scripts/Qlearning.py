@@ -4,11 +4,9 @@ class Qlearning(object):
 
     def update_q_table(self, left_card, right_card, decision, current_reward, alpha):
         if decision == 1:
-            updated_value = self.Q_table[left_card - 1] + alpha * (current_reward - self.Q_table[left_card - 1])
-            self.Q_table[left_card - 1] = updated_value
+            self.Q_table[left_card - 1] = self.Q_table[left_card - 1] + alpha * (current_reward - self.Q_table[left_card - 1])
         elif decision == 0:
-            updated_value = self.Q_table[right_card - 1] + alpha * (current_reward - self.Q_table[right_card - 1])
-            self.Q_table[right_card - 1] = updated_value
+            self.Q_table[right_card - 1] = self.Q_table[right_card - 1] + alpha * (current_reward - self.Q_table[right_card - 1])
         return self.Q_table
 
 

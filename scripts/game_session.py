@@ -26,7 +26,10 @@ class GameSession:
         self.player = player(self.game_skeleton)
 
     def play(self):
-        self.action_history = self.player.decide()
+        self.player.decide()
+        self.action_history = self.player.decisions
+        self.reward_history = self.player.rewards
+        self.correct_action_history = self.player.correct_actions
 
     def _create_game_skeleton(self):
         for block in range(self.maximum_blocks):
@@ -133,6 +136,7 @@ class GameSession:
         self.result.to_csv(self._create_file_path(), index=False)
 
     def _create_result(self):
+        self.reward_history = list(map(int, self.reward_history))
         game_stats = {'StimulusHistory': self.stimulus_history, 'StimulusLeft': self.stimulus_history_left,
                       'StimulusRight': self.stimulus_history_right,
                       'Action': self.action_history, 'Was the Action Correct?': self.correct_action_history,
@@ -150,4 +154,4 @@ class GameSession:
 if __name__ == '__main__':
     game = GameSession(player=ModelAsPlayer)
     game.play()
-    # game.save_results()
+    game.save_results()
