@@ -5,7 +5,7 @@ from math import floor
 
 import pandas as pd
 
-from player import VirtualPlayer
+from scripts.player import VirtualPlayer
 
 
 class GameSession:
