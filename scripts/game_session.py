@@ -5,11 +5,11 @@ from math import floor
 
 import pandas as pd
 
-from player import Player, ModelAsPlayer
+from player import VirtualPlayer
 
 
 class GameSession:
-    def __init__(self, player, cycle_number=10, maximum_blocks=3, training_cycle_length=3):
+    def __init__(self, cycle_number=10, maximum_blocks=3, training_cycle_length=3):
         self.probability_of_reward = [0.8, 0.2, 0.7, 0.3, 0.6, 0.4]
         self.cycle_number = cycle_number
         self.maximum_blocks = maximum_blocks
@@ -23,13 +23,12 @@ class GameSession:
         self.better_stimulus = []
         self.RewardsGranted = np.zeros(shape=(2, 90))
         self._create_game_skeleton()
-        self.player = player(self.game_skeleton)
 
-    def play(self):
-        self.player.decide()
-        self.action_history = self.player.decisions
-        self.reward_history = self.player.rewards
-        self.correct_action_history = self.player.correct_actions
+    def play(self, player):
+        player.decide()
+        self.action_history = player.decisions
+        self.reward_history = player.rewards
+        self.correct_action_history = player.correct_actions
 
     def _create_game_skeleton(self):
         for block in range(self.maximum_blocks):
@@ -152,6 +151,7 @@ class GameSession:
 
 
 if __name__ == '__main__':
-    game = GameSession(player=ModelAsPlayer)
-    game.play()
+    game = GameSession()
+    player = VirtualPlayer(game_skeleton=game.game_skeleton, T=10, alpha=0.1)
+    game.play(player=player)
     game.save_results()
