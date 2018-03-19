@@ -4,8 +4,8 @@ from random import random
 from scipy.optimize import minimize
 import numpy as np
 
-from ReadData import Data
-from Qlearning import Qlearning
+from scripts.ReadData import Data
+from scripts.Qlearning import Qlearning
 
 
 class Player(object):
