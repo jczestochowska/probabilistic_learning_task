@@ -4,8 +4,8 @@ from random import random, choice
 from scipy.optimize import minimize
 import numpy as np
 
-from scripts.ReadData import Data
-from scripts.Qlearning import Qlearning
+from ReadData import Data
+from Qlearning import Qlearning
 
 
 class RealPlayer(object):
@@ -50,27 +50,47 @@ class ModelAsPlayer(Player):
         super(ModelAsPlayer, self).__init__()
         self.condition_left = game_skeleton['StimulusLeft']
         self.condition_right = game_skeleton['StimulusRight']
+        self.left_rewards = game_skeleton['LeftReward']
+        self.right_rewards = game_skeleton['RightReward']
+        self.better_stimulus = game_skeleton['BetterStimulus']
         self.Q_table = self.Q_learning.Q_table
         self.decisions = []
+        self.rewards = []
+        self.correct_actions = []
         self.T = 0.2
         self.alpha = 0.3
 
     def decide(self):
         for index, condition_left in enumerate(self.condition_left):
+            left_reward = self.left_rewards[index]
+            right_reward = self.right_rewards[index]
             condition_right = self.condition_right[index]
             Q_A = self.Q_table[condition_left - 1]
             p_a = self.probability_A(Q_A, 1 - Q_A, self.T)
             dec = lambda x: random() < x
             decision = int(dec(p_a))
+            self._is_action_correct(decision, index)
             self.decisions.append(decision)
-            reward = self.reward(decision)
+            reward = self.get_reward(decision, left_reward, right_reward)
+            self.rewards.append(reward)
             self.Q_learning.update_q_table(condition_left, condition_right, decision, reward, self.alpha)
         return self.decisions
 
-    # prowizorka póki nie wiemy jak pobierać te nagrody i kary
+    def _is_action_correct(self, decision, index):
+        if decision == self.better_stimulus[index]:
+            self.correct_actions.append(1)
+        else:
+            self.correct_actions.append(0)
+
     @staticmethod
-    def reward(decision):
-        return choice([1, -1])
+    def get_reward(decision, left_reward, right_reward):
+        if decision == 1:
+            reward = left_reward
+        elif decision == 0:
+            reward = right_reward
+        if reward == 0:
+            reward = -1
+        return reward
 
 
 class Estimator(Player):
