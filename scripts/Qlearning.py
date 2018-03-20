@@ -1,4 +1,4 @@
-class Qlearning(object):
+class Qlearning():
     def __init__(self):
         self.Q_table = [0, 0, 0, 0, 0, 0]
 

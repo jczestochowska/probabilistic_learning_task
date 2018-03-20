@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-class Data(object):
+class ExcelData():
     def __init__(self, path):
         self.data = pd.read_excel(path)
 
@@ -11,11 +11,11 @@ class Data(object):
         condition_right = [int(i) for i in data.iloc[1][0:90].tolist()]
         decisions = [int(i) for i in data.iloc[2][0:90].tolist()]
         rewards = [int(i) for i in data.iloc[4][0:90].tolist()]
-        dir_data = {'StimulusLeft': condition_left, 'StimulusRight': condition_right, 'Actions': decisions,
-                    'Rewards': rewards}
-        return dir_data
+        data = {'StimulusLeft': condition_left, 'StimulusRight': condition_right, 'Actions': decisions,
+                'Rewards': rewards}
+        return data
 
 
 if __name__ == '__main__':
-    d = Data('C:/Users/Marlena/Desktop/studia/6 semestr/ZPI/gra ZPI/wyniki/MarlenaDudalearning.xls')
+    d = ExcelData(path='')
     print(d.prepare_data())
