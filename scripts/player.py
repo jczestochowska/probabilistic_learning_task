@@ -4,11 +4,14 @@ from random import random
 from scipy.optimize import minimize
 import numpy as np
 
-from scripts.ReadData import Data
+from scripts.ReadData import ExcelData
 from scripts.Qlearning import Qlearning
 
+MAX_EXP = 700
+MIN_LOG = 0.01
 
-class Player(object):
+
+class Player():
     def __init__(self, **params):
         # params: type --> Dict[str, float]
         # params: alpha, T and so on
@@ -20,8 +23,7 @@ class Player(object):
         pass
 
     def probability_A(self, Q_A, Q_B, T):
-        p_A = 1 / (1 + exp(min((Q_B - Q_A) / T, 700)))
-        return p_A
+        return 1 / (1 + exp(min((Q_B - Q_A) / T, MAX_EXP)))
 
 
 class VirtualPlayer(Player):
@@ -75,9 +77,9 @@ class VirtualPlayer(Player):
             self.correct_actions.append(0)
 
 
-class RealPlayer(object):
+class RealPlayer():
     def __init__(self):
-        self.d = Data('C:/Users/Marlena/Desktop/studia/6 semestr/ZPI/gra ZPI/wyniki/MarlenaDudalearning.xls')
+        self.d = ExcelData(path='')
         self.data = self.d.prepare_data()
         self.condition_left = self.data['StimulusLeft']
         self.condition_right = self.data['StimulusRight']
@@ -85,10 +87,9 @@ class RealPlayer(object):
         self.rewards = self.data['Rewards']
         self.Estimator = Estimator(self.decisions, self.condition_left, self.condition_right, self.rewards)
 
-    def search_paramethers(self):
-        opt_params = self.Estimator.max_LLE()
-        T = opt_params['x'][0]
-        alpha = opt_params['x'][1]
+    def search_parameters(self):
+        T = self.Estimator.max_log_likelihood()['x'][0]
+        alpha = self.Estimator.max_log_likelihood()['x'][1]
         return T, alpha
 
 
@@ -101,22 +102,21 @@ class Estimator(Player):
         self.condition_right = condition_right
         self.Q_table = self.Q_learning.Q_table
 
-    def LL_function(self, params, sign=1.0):
-        (T, alpha) = params
-        loglikelihood = 0
+    def log_likelihood_function(self, params, sign=1.0):
+        T, alpha = params
+        log_likelihood = 0
         for index, decision in enumerate(self.decisions):
             Q_A = self.Q_table[self.condition_left[index] - 1]
             p_a = self.probability_A(Q_A, 1 - Q_A, T)
             reward = self.rewards[index]
             self.Q_learning.update_q_table(self.condition_left[index], self.condition_right[index], decision, reward,
                                            alpha)
-            loglikelihood += sign * (decision * log(max(p_a, 0.01)) + (1 - decision) * log(1 - min(p_a, 0.99)))
-        return loglikelihood
+            log_likelihood += sign * (
+                decision * log(max(p_a, MIN_LOG)) + (1 - decision) * log(1 - min(p_a, 1 - MIN_LOG)))
+        return log_likelihood
 
-    def max_LLE(self):
-        opt_function = self.LL_function
-        opt_params = minimize(opt_function, x0=np.array([0.1, 0.1]), method='Nelder-Mead', args=(-1.0,))
-        return opt_params
+    def max_log_likelihood(self):
+        return minimize(self.log_likelihood_function, x0=np.array([0.1, 0.1]), method='Nelder-Mead', args=(-1.0,))
 
 
 if __name__ == '__main__':
@@ -125,6 +125,5 @@ if __name__ == '__main__':
         'StimulusRight': [4, 6, 2, 5, 2, 4, 2, 4, 6, 1, 5, 3, 6, 2, 4, 6]}
     player1 = VirtualPlayer(game_skeleton)
     print(player1.decide())
-    # print(player1.Q_table)
     rp = RealPlayer()
-    print(rp.search_paramethers())
+    print(rp.search_parameters())
