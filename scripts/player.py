@@ -78,8 +78,8 @@ class VirtualPlayer(Player):
 
 
 class RealPlayer():
-    def __init__(self):
-        self.d = ExcelData(path='')
+    def __init__(self, path):
+        self.d = ExcelData(path=path)
         self.data = self.d.prepare_data()
         self.condition_left = self.data['StimulusLeft']
         self.condition_right = self.data['StimulusRight']
@@ -88,8 +88,7 @@ class RealPlayer():
         self.Estimator = Estimator(self.decisions, self.condition_left, self.condition_right, self.rewards)
 
     def search_parameters(self):
-        T = self.Estimator.max_log_likelihood()['x'][0]
-        alpha = self.Estimator.max_log_likelihood()['x'][1]
+        T, alpha = self.Estimator.max_log_likelihood().x
         return T, alpha
 
 
@@ -120,10 +119,10 @@ class Estimator(Player):
 
 
 if __name__ == '__main__':
-    game_skeleton = {
-        'StimulusLeft': [3, 5, 1, 6, 1, 3, 1, 3, 5, 2, 6, 4, 5, 1, 3, 5],
-        'StimulusRight': [4, 6, 2, 5, 2, 4, 2, 4, 6, 1, 5, 3, 6, 2, 4, 6]}
-    player1 = VirtualPlayer(game_skeleton)
-    print(player1.decide())
-    rp = RealPlayer()
+    # game_skeleton = {
+    #     'StimulusLeft': [3, 5, 1, 6, 1, 3, 1, 3, 5, 2, 6, 4, 5, 1, 3, 5],
+    #     'StimulusRight': [4, 6, 2, 5, 2, 4, 2, 4, 6, 1, 5, 3, 6, 2, 4, 6]}
+    # player1 = VirtualPlayer(game_skeleton)
+    # print(player1.decide())
+    rp = RealPlayer('C:\\Users\\jczes\\Documents\\ZPI\\data\\OlaBrudeckalearning.xls')
     print(rp.search_parameters())
