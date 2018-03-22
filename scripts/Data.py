@@ -20,24 +20,48 @@ class ExcelData():
         return data
 
 
-def save_parameters_to_csv(path):
-    all_files = glob.glob(path + "/*.xls")
-    names_list = []
-    T_list = []
-    alpha_list = []
-    for file in all_files:
-        name = os.path.splitext(os.path.basename(file))[0]
-        names_list.append(name[:-8])
-        excel_data = ExcelData(file)
-        real_data = excel_data.prepare_data()
-        rp = RealPlayer(real_data)
-        T, alpha = rp.search_parameters()
-        T_list.append(T)
-        alpha_list.append(alpha)
-    data = {'Name': names_list, 'T': T_list, 'alpha': alpha_list}
-    df = pd.DataFrame(data=data)
-    df.to_csv('parameters_real_player', sep='\t')
+class SavingParameters():
+    def __init__(self):
+        self.T_list = []
+        self.names_list = []
+        self.alpha_list = []
+        self.alpha_gain_list = []
+        self.alpha_loose_list = []
+        self.data = []
+
+    def save_parameters_to_csv(self, path, model):
+        all_files = glob.glob(path + "/*.xls")
+        for file in all_files:
+            name = os.path.splitext(os.path.basename(file))[0]
+            self.names_list.append(name[:-8])
+            excel_data = ExcelData(file)
+            real_data = excel_data.prepare_data()
+            rp = RealPlayer(real_data)
+            params = rp.search_parameters(model)
+            if model == 'Q_learning':
+                self.data = self.parameters_q_learning(params)
+            elif model == 'Rescorla-Wagner':
+                self.data = self.parameters_rescorla_wargner(params)
+        df = pd.DataFrame(data=self.data)
+        df.to_csv(model + '_' + 'parameters_real_player', sep='\t')
+
+    def parameters_q_learning(self, params):
+        T, alpha = params
+        self.T_list.append(T)
+        self.alpha_list.append(alpha)
+        parameters = {'Name': self.names_list, 'T': self.T_list, 'alpha': self.alpha_list}
+        return parameters
+
+    def parameters_rescorla_wargner(self, params):
+        T, alpha_gain, alpha_loose = params
+        self.T_list.append(T)
+        self.alpha_gain_list.append(alpha_gain)
+        self.alpha_loose_list.append(alpha_loose)
+        parameters = {'Name': self.names_list, 'T': self.T_list, 'alpha gain': self.alpha_gain_list,
+                      'alpha loose': self.alpha_loose_list}
+        return parameters
 
 
 if __name__ == '__main__':
-    save_parameters_to_csv(path='')
+    s = SavingParameters()
+    s.save_parameters_to_csv('C:\\Users\\Marlena\\PycharmProjects\\ZPI\\ZPI\\data', 'Rescorla-Wagner')

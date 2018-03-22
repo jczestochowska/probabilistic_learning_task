@@ -4,7 +4,9 @@ from random import random
 from scipy.optimize import minimize
 import numpy as np
 
+from scripts.Data import ExcelData
 from scripts.Qlearning import Qlearning
+from scripts.RescorlaWagner import RescorlaWagner
 
 MAX_EXP = 700
 MIN_LOG = 0.01
@@ -15,6 +17,7 @@ class Player():
         # params: type --> Dict[str, float]
         # params: alpha, T and so on
         self.Q_learning = Qlearning()
+        self.Rescola_Wagner = RescorlaWagner()
         self.params = params
 
     @abstractmethod
@@ -52,7 +55,7 @@ class VirtualPlayer(Player):
             self.decisions.append(decision)
             reward = self.get_reward(decision, left_reward, right_reward)
             self.rewards.append(reward)
-            self.Q_learning.update_q_table(condition_left, condition_right, decision, reward, alpha)
+            self.Q_learning.q_learning_model((condition_left, condition_right, decision, reward), alpha)
         return self.decisions
 
     @staticmethod
@@ -85,9 +88,8 @@ class RealPlayer():
         self.rewards = self.data['Rewards']
         self.Estimator = Estimator(self.decisions, self.condition_left, self.condition_right, self.rewards)
 
-    def search_parameters(self):
-        T, alpha = self.Estimator.max_log_likelihood().x
-        return T, alpha
+    def search_parameters(self, model):
+        return self.Estimator.max_log_likelihood(model).x
 
 
 class Estimator(Player):
@@ -99,21 +101,31 @@ class Estimator(Player):
         self.condition_right = condition_right
         self.Q_table = self.Q_learning.Q_table
 
-    def log_likelihood_function(self, params, sign=1.0):
-        T, alpha = params
+    def log_likelihood_function(self, params, sign=1.0, model=None):
+        T = params[0]
+        method = None
         log_likelihood = 0
         for index, decision in enumerate(self.decisions):
             Q_A = self.Q_table[self.condition_left[index] - 1]
             p_a = self.probability_A(Q_A, 1 - Q_A, T)
             reward = self.rewards[index]
-            self.Q_learning.update_q_table(self.condition_left[index], self.condition_right[index], decision, reward,
-                                           alpha)
+            game_data = (self.condition_left[index], self.condition_right[index], decision, reward)
+            if model == 'Q_learning':
+                method = self.Q_learning.q_learning_model
+            elif model == 'Rescorla-Wagner':
+                method = self.Rescola_Wagner.rescorla_wagner_model
+            method(game_data, params)
             log_likelihood += sign * (
                 decision * log(max(p_a, MIN_LOG)) + (1 - decision) * log(1 - min(p_a, 1 - MIN_LOG)))
         return log_likelihood
 
-    def max_log_likelihood(self):
-        return minimize(self.log_likelihood_function, x0=np.array([0.1, 0.1]), method='Nelder-Mead', args=(-1.0,))
+    def max_log_likelihood(self, model):
+        x0 = np.array([])
+        if model == 'Q_learning':
+            x0 = np.array([0.1, 0.1])
+        elif model == 'Rescorla-Wagner':
+            x0 = np.array([0.1, 0.1, 0.1])
+        return minimize(self.log_likelihood_function, x0=x0, method='Nelder-Mead', args=(-1.0, model))
 
 
 if __name__ == '__main__':
@@ -122,5 +134,8 @@ if __name__ == '__main__':
     #     'StimulusRight': [4, 6, 2, 5, 2, 4, 2, 4, 6, 1, 5, 3, 6, 2, 4, 6]}
     # player1 = VirtualPlayer(game_skeleton)
     # print(player1.decide())
-    rp = RealPlayer(data={})
-    print(rp.search_parameters())
+    excel_data = ExcelData('C:\\Users\\Marlena\\PycharmProjects\\ZPI\\ZPI\\data\\MarlenaDudalearning.xls')
+    real_data = excel_data.prepare_data()
+    rp = RealPlayer(real_data)
+    print(rp.search_parameters('Q_learning'))
+    print(rp.search_parameters('Rescorla-Wagner'))
