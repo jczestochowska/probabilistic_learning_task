@@ -4,7 +4,6 @@ from random import random
 from scipy.optimize import minimize
 import numpy as np
 
-from scripts.ReadData import ExcelData
 from scripts.Qlearning import Qlearning
 
 MAX_EXP = 700
@@ -78,9 +77,8 @@ class VirtualPlayer(Player):
 
 
 class RealPlayer():
-    def __init__(self, path):
-        self.d = ExcelData(path=path)
-        self.data = self.d.prepare_data()
+    def __init__(self, data):
+        self.data = data
         self.condition_left = self.data['StimulusLeft']
         self.condition_right = self.data['StimulusRight']
         self.decisions = self.data['Actions']
@@ -124,5 +122,5 @@ if __name__ == '__main__':
     #     'StimulusRight': [4, 6, 2, 5, 2, 4, 2, 4, 6, 1, 5, 3, 6, 2, 4, 6]}
     # player1 = VirtualPlayer(game_skeleton)
     # print(player1.decide())
-    rp = RealPlayer('C:\\Users\\jczes\\Documents\\ZPI\\data\\OlaBrudeckalearning.xls')
+    rp = RealPlayer(data={})
     print(rp.search_parameters())
