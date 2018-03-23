@@ -3,8 +3,8 @@ from math import exp, log
 from random import random
 from scipy.optimize import minimize
 import numpy as np
+from pandas import read_excel
 
-from scripts.Data import ExcelData
 from scripts.Qlearning import Qlearning
 from scripts.RescorlaWagner import RescorlaWagner
 
@@ -12,19 +12,20 @@ MAX_EXP = 700
 MIN_LOG = 0.01
 
 
-class Player():
+class Player:
     def __init__(self, **params):
         # params: type --> Dict[str, float]
         # params: alpha, T and so on
         self.Q_learning = Qlearning()
-        self.Rescola_Wagner = RescorlaWagner()
+        self.Rescorla_Wagner = RescorlaWagner()
         self.params = params
 
     @abstractmethod
     def decide(self):
         pass
 
-    def probability_A(self, Q_A, Q_B, T):
+    @staticmethod
+    def probability_A(Q_A, Q_B, T):
         return 1 / (1 + exp(min((Q_B - Q_A) / T, MAX_EXP)))
 
 
@@ -79,17 +80,27 @@ class VirtualPlayer(Player):
             self.correct_actions.append(0)
 
 
-class RealPlayer():
-    def __init__(self, data):
-        self.data = data
-        self.condition_left = self.data['StimulusLeft']
-        self.condition_right = self.data['StimulusRight']
-        self.decisions = self.data['Actions']
-        self.rewards = self.data['Rewards']
-        self.Estimator = Estimator(self.decisions, self.condition_left, self.condition_right, self.rewards)
+class RealPlayer:
+    def __init__(self, path):
+        self.data = self._read_real_player_excel(path)
+
+    @staticmethod
+    def _read_real_player_excel(path):
+        data = read_excel(path, header=None)
+        data = data.T
+        data.columns = data.iloc[0]
+        data = data.reindex(data.index.drop(0))
+        data.drop(['StimulusPair'], axis=1, inplace=True)
+        data.drop(['Response time'], axis=1, inplace=True)
+        data = data[0:90]
+        return data.astype(int)
 
     def search_parameters(self, model):
-        return self.Estimator.max_log_likelihood(model).x
+        estimator = Estimator(decisions=self.data['Action'].tolist(),
+                              condition_left=self.data['StimulusLeft'].tolist(),
+                              condition_right=self.data['StimulusRight'].tolist(),
+                              rewards=self.data['Reward'].tolist())
+        return estimator.max_log_likelihood(model).x
 
 
 class Estimator(Player):
@@ -99,28 +110,24 @@ class Estimator(Player):
         self.rewards = rewards
         self.condition_left = condition_left
         self.condition_right = condition_right
-        self.Q_table = self.Q_learning.Q_table
 
-    def log_likelihood_function(self, params, sign=1.0, model=None):
+    def log_likelihood_function(self, params, sign, model):
         T = params[0]
-        method = None
         log_likelihood = 0
+        if model == 'Q_learning':
+            model_method = self.Q_learning.q_learning_model
+        elif model == 'Rescorla-Wagner':
+            model_method = self.Rescorla_Wagner.rescorla_wagner_model
         for index, decision in enumerate(self.decisions):
-            Q_A = self.Q_table[self.condition_left[index] - 1]
+            Q_A = self.Q_learning.Q_table[self.condition_left[index] - 1]
             p_a = self.probability_A(Q_A, 1 - Q_A, T)
-            reward = self.rewards[index]
-            game_data = (self.condition_left[index], self.condition_right[index], decision, reward)
-            if model == 'Q_learning':
-                method = self.Q_learning.q_learning_model
-            elif model == 'Rescorla-Wagner':
-                method = self.Rescola_Wagner.rescorla_wagner_model
-            method(game_data, params)
+            game_status = (self.condition_left[index], self.condition_right[index], decision, self.rewards[index])
+            model_method(game_status, params)
             log_likelihood += sign * (
                 decision * log(max(p_a, MIN_LOG)) + (1 - decision) * log(1 - min(p_a, 1 - MIN_LOG)))
         return log_likelihood
 
     def max_log_likelihood(self, model):
-        x0 = np.array([])
         if model == 'Q_learning':
             x0 = np.array([0.1, 0.1])
         elif model == 'Rescorla-Wagner':
@@ -129,13 +136,6 @@ class Estimator(Player):
 
 
 if __name__ == '__main__':
-    # game_skeleton = {
-    #     'StimulusLeft': [3, 5, 1, 6, 1, 3, 1, 3, 5, 2, 6, 4, 5, 1, 3, 5],
-    #     'StimulusRight': [4, 6, 2, 5, 2, 4, 2, 4, 6, 1, 5, 3, 6, 2, 4, 6]}
-    # player1 = VirtualPlayer(game_skeleton)
-    # print(player1.decide())
-    excel_data = ExcelData('C:\\Users\\Marlena\\PycharmProjects\\ZPI\\ZPI\\data\\MarlenaDudalearning.xls')
-    real_data = excel_data.prepare_data()
-    rp = RealPlayer(real_data)
+    rp = RealPlayer('/home/jczestochowska/workspace/ZPI/data/AniaPiateklearning.xls')
     print(rp.search_parameters('Q_learning'))
     print(rp.search_parameters('Rescorla-Wagner'))

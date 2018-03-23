@@ -6,11 +6,11 @@ class RescorlaWagner(Qlearning):
         super(RescorlaWagner, self).__init__()
 
     def choose_alpha(self, params, reward):
-        _, alpha_gain, alpha_loose = params
+        _, alpha_gain, alpha_lose = params
         if reward == 1:
             return alpha_gain
         elif reward == -1:
-            return alpha_loose
+            return alpha_lose
 
     def rescorla_wagner_model(self, game_data, params):
         _, _, _, reward = game_data
