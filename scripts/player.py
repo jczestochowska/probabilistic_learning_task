@@ -83,6 +83,10 @@ class VirtualPlayer(Player):
 class RealPlayer:
     def __init__(self, path):
         self.data = self._read_real_player_excel(path)
+        self.estimator = Estimator(decisions=self.data['Action'].tolist(),
+                                   condition_left=self.data['StimulusLeft'].tolist(),
+                                   condition_right=self.data['StimulusRight'].tolist(),
+                                   rewards=self.data['Reward'].tolist())
 
     @staticmethod
     def _read_real_player_excel(path):
@@ -96,11 +100,7 @@ class RealPlayer:
         return data.astype(int)
 
     def search_parameters(self, model):
-        estimator = Estimator(decisions=self.data['Action'].tolist(),
-                              condition_left=self.data['StimulusLeft'].tolist(),
-                              condition_right=self.data['StimulusRight'].tolist(),
-                              rewards=self.data['Reward'].tolist())
-        return estimator.max_log_likelihood(model).x
+        return self.estimator.max_log_likelihood(model).x
 
 
 class Estimator(Player):
