@@ -1,37 +1,17 @@
-from abc import abstractmethod
-from math import exp, log
+from math import log
 from random import random
-from scipy.optimize import minimize
+
 import numpy as np
 from pandas import read_excel
+from scipy.optimize import minimize
 
-from scripts.Qlearning import Qlearning
-from scripts.RescorlaWagner import RescorlaWagner
+from scripts.models import probability_A, RescorlaWagner, Qlearning
 
-MAX_EXP = 700
 MIN_LOG = 0.01
 
 
-class Player:
-    def __init__(self, **params):
-        # params: type --> Dict[str, float]
-        # params: alpha, T and so on
-        self.Q_learning = Qlearning()
-        self.Rescorla_Wagner = RescorlaWagner()
-        self.params = params
-
-    @abstractmethod
-    def decide(self):
-        pass
-
-    @staticmethod
-    def probability_A(Q_A, Q_B, T):
-        return 1 / (1 + exp(min((Q_B - Q_A) / T, MAX_EXP)))
-
-
-class VirtualPlayer(Player):
+class VirtualPlayer:
     def __init__(self, game_skeleton, **params):
-        super(VirtualPlayer, self).__init__()
         self.condition_left = game_skeleton['StimulusLeft']
         self.condition_right = game_skeleton['StimulusRight']
         self.left_rewards = game_skeleton['LeftReward']
@@ -42,21 +22,20 @@ class VirtualPlayer(Player):
         self.correct_actions = []
         self.params = params
 
-    def decide(self):
+    def decide(self, model):
         T, alpha = self.params.values()
-        Q_table = self.Q_learning.Q_table
         for index, condition_left in enumerate(self.condition_left):
             left_reward = self.left_rewards[index]
             right_reward = self.right_rewards[index]
             condition_right = self.condition_right[index]
-            Q_A = Q_table[condition_left - 1]
-            p_a = self.probability_A(Q_A, 1 - Q_A, T)
+            Q_A = model.Q_table[condition_left - 1]
+            p_a = probability_A(Q_A, 1 - Q_A, T)
             decision = self._check_threshold(p_a)
             self._is_action_correct(decision, index)
             self.decisions.append(decision)
             reward = self.get_reward(decision, left_reward, right_reward)
             self.rewards.append(reward)
-            self.Q_learning.q_learning_model((condition_left, condition_right, decision, reward), alpha)
+            model.q_learning_model((condition_left, condition_right, decision, reward), alpha)
         return self.decisions
 
     @staticmethod
@@ -81,12 +60,8 @@ class VirtualPlayer(Player):
 
 
 class RealPlayer:
-    def __init__(self, path):
+    def __init__(self, path, ):
         self.data = self._read_real_player_excel(path)
-        self.estimator = Estimator(decisions=self.data['Action'].tolist(),
-                                   condition_left=self.data['StimulusLeft'].tolist(),
-                                   condition_right=self.data['StimulusRight'].tolist(),
-                                   rewards=self.data['Reward'].tolist())
 
     @staticmethod
     def _read_real_player_excel(path):
@@ -99,28 +74,25 @@ class RealPlayer:
         data = data[0:90]
         return data.astype(int)
 
-    def search_parameters(self, model):
-        return self.estimator.max_log_likelihood(model).x
+    def search_parameters(self, model, estimator):
+        return estimator.max_log_likelihood(model).x
 
 
-class Estimator(Player):
-    def __init__(self, decisions, condition_left, condition_right, rewards):
-        super(Estimator, self).__init__()
+class Estimator:
+    def __init__(self, decisions, condition_left, condition_right, rewards, model):
         self.decisions = decisions
         self.rewards = rewards
         self.condition_left = condition_left
         self.condition_right = condition_right
+        self.model = model
 
-    def log_likelihood_function(self, params, sign, model):
+    def log_likelihood_function(self, params, sign):
         T = params[0]
         log_likelihood = 0
-        if model == 'Q_learning':
-            model_method = self.Q_learning.q_learning_model
-        elif model == 'Rescorla-Wagner':
-            model_method = self.Rescorla_Wagner.rescorla_wagner_model
+        model_method = self._resolve_model_method()
         for index, decision in enumerate(self.decisions):
-            Q_A = self.Q_learning.Q_table[self.condition_left[index] - 1]
-            p_a = self.probability_A(Q_A, 1 - Q_A, T)
+            Q_A = self.model.Q_table[self.condition_left[index] - 1]
+            p_a = probability_A(Q_A, 1 - Q_A, T)
             game_status = (self.condition_left[index], self.condition_right[index], decision, self.rewards[index])
             model_method(game_status, params)
             log_likelihood += sign * (
@@ -128,14 +100,29 @@ class Estimator(Player):
         return log_likelihood
 
     def max_log_likelihood(self, model):
-        if model == 'Q_learning':
-            x0 = np.array([0.1, 0.1])
-        elif model == 'Rescorla-Wagner':
+        return minimize(self.log_likelihood_function, x0=self._get_optimization_start_points(), method='Nelder-Mead',
+                        args=(-1.0,))
+
+    def _resolve_model_method(self):
+        if isinstance(self.model, RescorlaWagner):
+            model_method = self.model.rescorla_wagner_model
+        else:
+            model_method = self.model.q_learning_model
+        return model_method
+
+    def _get_optimization_start_points(self):
+        if isinstance(self.model, RescorlaWagner):
             x0 = np.array([0.1, 0.1, 0.1])
-        return minimize(self.log_likelihood_function, x0=x0, method='Nelder-Mead', args=(-1.0, model))
+        else:
+            x0 = np.array([0.1, 0.1])
+        return x0
 
 
 if __name__ == '__main__':
-    rp = RealPlayer('/home/jczestochowska/workspace/ZPI/data/AniaPiateklearning.xls')
-    print(rp.search_parameters('Q_learning'))
-    print(rp.search_parameters('Rescorla-Wagner'))
+    rp = RealPlayer("C:\\Users\\Marlena\\Desktop\\studia\\6 semestr\\ZPI\\gra ZPI\\wyniki\\EwaDudalearning.xls")
+    model = RescorlaWagner()
+    estimator = Estimator(decisions=rp.data['Action'].tolist(),
+                          condition_left=rp.data['StimulusLeft'].tolist(),
+                          condition_right=rp.data['StimulusRight'].tolist(),
+                          rewards=rp.data['Reward'].tolist(), model=model)
+    print(rp.search_parameters(model, estimator))
