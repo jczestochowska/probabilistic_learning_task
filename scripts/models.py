@@ -56,7 +56,7 @@ class Estimator:
                 decision * log(max(p_a, MIN_LOG)) + (1 - decision) * log(1 - min(p_a, 1 - MIN_LOG)))
         return log_likelihood
 
-    def max_log_likelihood(self, model):
+    def max_log_likelihood(self):
         return minimize(self.log_likelihood_function, x0=self._get_optimization_start_points(), method='Nelder-Mead',
                         args=(-1.0,))
 
