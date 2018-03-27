@@ -69,8 +69,8 @@ class RealPlayer:
         data = data[0:90]
         return data.astype(int)
 
-    def search_parameters(self, model, estimator):
-        return estimator.max_log_likelihood(model).x
+    def search_parameters(self, estimator):
+        return estimator.max_log_likelihood().x
 
 
 if __name__ == '__main__':
@@ -80,4 +80,4 @@ if __name__ == '__main__':
                           condition_left=rp.data['StimulusLeft'].tolist(),
                           condition_right=rp.data['StimulusRight'].tolist(),
                           rewards=rp.data['Reward'].tolist(), model=model)
-    print(rp.search_parameters(model, estimator))
+    print(rp.search_parameters( estimator))
