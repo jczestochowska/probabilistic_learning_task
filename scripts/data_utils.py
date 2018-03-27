@@ -1,7 +1,7 @@
 import csv
 import os
 
-from scripts.player import RealPlayer
+from scripts.player import Estimator, RealPlayer
 
 
 def save_all_real_players_parameters_to_csv(data_dir_path, new_filename, model):
@@ -13,20 +13,25 @@ def save_all_real_players_parameters_to_csv(data_dir_path, new_filename, model):
             if filename.endswith('xls'):
                 row = []
                 rp = RealPlayer(os.path.join(data_dir_path, filename))
+                estimator = Estimator(decisions=rp.data['Action'].tolist(),
+                                      condition_left=rp.data['StimulusLeft'].tolist(),
+                                      condition_right=rp.data['StimulusRight'].tolist(),
+                                      rewards=rp.data['Reward'].tolist())
                 name = os.path.splitext(os.path.basename(filename))[0][:-8]
-                player_parameters = list(rp.search_parameters(model))
-                row.extend(player_parameters)
+                player_parameters = list(rp.search_parameters(model, estimator))
                 row.append(name)
+                row.extend(player_parameters)
                 writer.writerow(row)
 
 
 def get_header(model):
     if model == 'Q_learning':
-        header = ['T', 'alpha', 'name']
+        header = ['name', 'T', 'alpha']
     elif model == 'Rescorla-Wagner':
-        header = ['T', 'alpha gain', 'alpha lose', 'name']
+        header = ['name', 'T', 'alpha gain', 'alpha lose']
     return header
 
 
 if __name__ == '__main__':
-    save_all_real_players_parameters_to_csv("/home/jczestochowska/workspace/ZPI/data", 'tes_params', 'Q_learning')
+    save_all_real_players_parameters_to_csv("C:\\Users\\Marlena\\Desktop\\studia\\6 semestr\\ZPI\\gra ZPI\\wyniki",
+                                            'tes_params', 'Rescorla-Wagner')
