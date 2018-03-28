@@ -3,3 +3,4 @@ data/*
 *.iml
 .mypy_cache/
 __pycache__/
+out/*
