@@ -27,11 +27,10 @@ def save_all_real_players_parameters_to_csv(data_dir_path, new_filename, model):
 
 
 def get_header(model):
-    model_name = type(model).__name__
-    if model_name == 'Qlearning':
-        header = ['name', 'T', 'alpha']
-    elif model_name == 'RescorlaWagner':
+    if isinstance(model, RescorlaWagner):
         header = ['name', 'T', 'alpha gain', 'alpha lose']
+    else:
+        header = ['name', 'T', 'alpha']
     return header
 
 
