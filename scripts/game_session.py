@@ -5,7 +5,8 @@ from math import floor
 
 import pandas as pd
 
-from scripts.player import VirtualPlayer
+from models import Qlearning, RescorlaWagner
+from player import VirtualPlayer
 
 
 class GameSession:
@@ -24,8 +25,8 @@ class GameSession:
         self.RewardsGranted = np.zeros(shape=(2, 90))
         self._create_game_skeleton()
 
-    def play(self, player):
-        player.decide()
+    def play(self, player, model):
+        player.decide(model)
         self.action_history = player.decisions
         self.reward_history = player.rewards
         self.correct_action_history = player.correct_actions
@@ -152,6 +153,7 @@ class GameSession:
 
 if __name__ == '__main__':
     game = GameSession()
-    player = VirtualPlayer(game_skeleton=game.game_skeleton, T=10, alpha=0.1)
-    game.play(player=player)
+    player = VirtualPlayer(game.game_skeleton, 10, 0.1)
+    model = RescorlaWagner()
+    game.play(player=player, model=model)
     game.save_results()
