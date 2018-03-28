@@ -2,11 +2,12 @@ from random import random
 
 from pandas import read_excel
 
-from scripts.models import Estimator, probability_A, Qlearning
+from models import Estimator, probability_A, Qlearning, RescorlaWagner
 
 
 class VirtualPlayer:
-    def __init__(self, game_skeleton, **params):
+    def __init__(self, game_skeleton, *params):
+        # type (DataFrame, List[float|int]) -> None
         self.condition_left = game_skeleton['StimulusLeft']
         self.condition_right = game_skeleton['StimulusRight']
         self.left_rewards = game_skeleton['LeftReward']
@@ -18,7 +19,7 @@ class VirtualPlayer:
         self.params = params
 
     def decide(self, model):
-        T, alpha = self.params.values()
+        T = self.params[0]
         for index, condition_left in enumerate(self.condition_left):
             left_reward = self.left_rewards[index]
             right_reward = self.right_rewards[index]
@@ -30,7 +31,9 @@ class VirtualPlayer:
             self.decisions.append(decision)
             reward = self.get_reward(decision, left_reward, right_reward)
             self.rewards.append(reward)
-            model.q_learning_model((condition_left, condition_right, decision, reward), alpha)
+            game_status = {'StimuliLeft': condition_left, 'StimuliRight': condition_right,
+                           'Action': decision, 'Reward': reward}
+            model.q_learning_model(game_status, self.params)
         return self.decisions
 
     @staticmethod
@@ -74,10 +77,10 @@ class RealPlayer:
 
 
 if __name__ == '__main__':
-    rp = RealPlayer("C:\\Users\\Marlena\\Desktop\\studia\\6 semestr\\ZPI\\gra ZPI\\wyniki\\MarlenaDudalearning.xls")
+    rp = RealPlayer("/home/jczestochowska/workspace/ZPI/data/AniaPiateklearning.xls")
     model = Qlearning()
     estimator = Estimator(decisions=rp.data['Action'].tolist(),
                           condition_left=rp.data['StimulusLeft'].tolist(),
                           condition_right=rp.data['StimulusRight'].tolist(),
                           rewards=rp.data['Reward'].tolist(), model=model)
-    print(rp.search_parameters( estimator))
+    print(rp.search_parameters(estimator))
