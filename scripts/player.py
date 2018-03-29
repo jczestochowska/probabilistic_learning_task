@@ -7,7 +7,7 @@ from models import Estimator, probability_A, Qlearning, RescorlaWagner
 
 class VirtualPlayer:
     def __init__(self, game_skeleton, *params):
-        # type (DataFrame, List[float|int]) -> None
+        # type (DataFrame, Tuple[float|int]) -> None
         self.condition_left = game_skeleton['StimulusLeft']
         self.condition_right = game_skeleton['StimulusRight']
         self.left_rewards = game_skeleton['LeftReward']
@@ -16,7 +16,7 @@ class VirtualPlayer:
         self.decisions = []
         self.rewards = []
         self.correct_actions = []
-        self.params = params
+        self.params = list(params)
 
     def decide(self, model):
         T = self.params[0]
