@@ -11,7 +11,7 @@ class Qlearning:
         # type (int) -> None
         self.Q_table = qtable_length * [0]
 
-    def q_learning_model(self, game_data, params):
+    def update_q_table(self, game_data, params):
         # type (Dict[str, int], List[int]) -> None
         alpha = params[-1]
         left_card = game_data['StimuliLeft']
@@ -27,12 +27,12 @@ class Qlearning:
 
 
 class RescorlaWagner(Qlearning):
-    def rescorla_wagner_model(self, game_data, params):
+    def update_q_table(self, game_data, params):
         # type (Dict[str, int], List[int]) -> None
         reward = game_data['Reward']
         alpha = self._choose_alpha(params, reward)
         params[-1] = alpha
-        self.q_learning_model(game_data, params)
+        super().update_q_table(game_data, params)
 
     @staticmethod
     def _choose_alpha(params, reward):
@@ -56,7 +56,6 @@ class Estimator:
     def log_likelihood_function(self, params, sign):
         T = params[0]
         log_likelihood = 0
-        model_method = self._resolve_model_method()
         for index, decision in enumerate(self.decisions):
             Q_A = self.model.Q_table[self.condition_left[index] - 1]
             p_a = probability_A(Q_A, 1 - Q_A, T)
@@ -64,7 +63,7 @@ class Estimator:
                            'StimuliRight': self.condition_right[index],
                            'Action': decision,
                            'Reward': self.rewards[index]}
-            model_method(game_status, params)
+            self.model.update_q_table(game_status, params)
             log_likelihood += sign * (
                 decision * log(max(p_a, MIN_LOG)) + (1 - decision) * log(1 - min(p_a, 1 - MIN_LOG)))
         return log_likelihood
@@ -72,13 +71,6 @@ class Estimator:
     def max_log_likelihood(self):
         return minimize(self.log_likelihood_function, x0=self._get_optimization_start_points(), method='Nelder-Mead',
                         args=(-1.0))
-
-    def _resolve_model_method(self):
-        if isinstance(self.model, RescorlaWagner):
-            model_method = self.model.rescorla_wagner_model
-        else:
-            model_method = self.model.q_learning_model
-        return model_method
 
     def _get_optimization_start_points(self):
         if isinstance(self.model, RescorlaWagner):
@@ -95,5 +87,5 @@ def probability_A(Q_A, Q_B, T):
 if __name__ == '__main__':
     ql = Qlearning()
     rw = RescorlaWagner()
-    print(ql.q_learning_model(game_data={'StimuliLeft': 1, 'StimuliRight': 2, 'Action': 1, 'Reward': -1},
-                              params=[0.1, 0.1, 0.1]))
+    print(ql.update_q_table(game_data={'StimuliLeft': 1, 'StimuliRight': 2, 'Action': 1, 'Reward': -1},
+                            params=[0.1, 0.1, 0.1]))

@@ -33,7 +33,7 @@ class VirtualPlayer:
             self.rewards.append(reward)
             game_status = {'StimuliLeft': condition_left, 'StimuliRight': condition_right,
                            'Action': decision, 'Reward': reward}
-            model.q_learning_model(game_status, self.params)
+            model.update_q_table(game_status, self.params)
         return self.decisions
 
     @staticmethod
