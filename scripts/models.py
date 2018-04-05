@@ -52,6 +52,7 @@ class Estimator:
         self.condition_left = condition_left
         self.condition_right = condition_right
         self.model = model
+        self.log_likelihood_table = []
 
     def log_likelihood_function(self, params, sign):
         T = params[0]
@@ -66,6 +67,7 @@ class Estimator:
             self.model.update_q_table(game_status, params)
             log_likelihood += sign * (
                 decision * log(max(p_a, MIN_LOG)) + (1 - decision) * log(1 - min(p_a, 1 - MIN_LOG)))
+        self.log_likelihood_table.append(log_likelihood)
         return log_likelihood
 
     def max_log_likelihood(self):
