@@ -2,7 +2,7 @@ from random import random
 
 from pandas import read_excel
 
-from models import Estimator, probability_A, Qlearning, RescorlaWagner
+from scripts.models import Estimator, probability_A, Qlearning, RescorlaWagner
 
 
 class VirtualPlayer:
@@ -21,20 +21,22 @@ class VirtualPlayer:
     def decide(self, model):
         T = self.params[0]
         for index, condition_left in enumerate(self.condition_left):
-            left_reward = self.left_rewards[index]
-            right_reward = self.right_rewards[index]
-            condition_right = self.condition_right[index]
-            Q_A = model.Q_table[condition_left - 1]
-            p_a = probability_A(Q_A, 1 - Q_A, T)
-            decision = self._check_threshold(p_a)
-            self._is_action_correct(decision, index)
-            self.decisions.append(decision)
-            reward = self.get_reward(decision, left_reward, right_reward)
-            self.rewards.append(reward)
-            game_status = {'StimuliLeft': condition_left, 'StimuliRight': condition_right,
-                           'Action': decision, 'Reward': reward}
-            model.update_q_table(game_status, self.params)
-        return self.decisions
+            self.simulate_game(T, condition_left, index, model)
+
+    def simulate_game(self, T, condition_left, index, model):
+        left_reward = self.left_rewards[index]
+        right_reward = self.right_rewards[index]
+        condition_right = self.condition_right[index]
+        Q_A = model.Q_table[condition_left - 1]
+        p_a = probability_A(Q_A, 1 - Q_A, T)
+        decision = self._check_threshold(p_a)
+        self._is_action_correct(decision, index)
+        self.decisions.append(decision)
+        reward = self.get_reward(decision, left_reward, right_reward)
+        self.rewards.append(reward)
+        game_status = {'StimuliLeft': condition_left, 'StimuliRight': condition_right,
+                       'Action': decision, 'Reward': reward}
+        model.update_q_table(game_status, self.params)
 
     @staticmethod
     def get_reward(decision, left_reward, right_reward):
@@ -58,7 +60,7 @@ class VirtualPlayer:
 
 
 class RealPlayer:
-    def __init__(self, path, ):
+    def __init__(self, path):
         self.data = self._read_real_player_excel(path)
 
     @staticmethod
