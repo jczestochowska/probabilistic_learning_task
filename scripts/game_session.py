@@ -154,6 +154,6 @@ class GameSession:
 if __name__ == '__main__':
     game = GameSession()
     player = VirtualPlayer(game.game_skeleton, 10, 0.1)
-    model = RescorlaWagner()
+    model = Qlearning()
     game.play(player=player, model=model)
     game.save_results()

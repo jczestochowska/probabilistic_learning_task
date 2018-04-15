@@ -1,8 +1,8 @@
 import csv
 import os
 
-from models import RescorlaWagner
-from player import Estimator, RealPlayer
+from scripts.models import RescorlaWagner, Estimator
+from scripts.player import RealPlayer
 
 
 def save_all_real_players_parameters_to_csv(data_dir_path, new_filename, model):
