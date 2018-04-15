@@ -1,8 +1,8 @@
 from random import random
-
 from pandas import read_excel
 
 from scripts.models import Estimator, probability_A, Qlearning, RescorlaWagner
+from scripts.game_session import GameSession
 
 
 class VirtualPlayer:
@@ -78,11 +78,21 @@ class RealPlayer:
         return estimator.max_log_likelihood().x
 
 
+class ModelPlayer(VirtualPlayer, RealPlayer):
+    def play_game(self, model):
+        T = self.params[0]
+        for index, condition_left in enumerate(self.condition_left):
+            self.simulate_game(T, condition_left, index, model)
+            estimator = Estimator(decisions=self.decisions,
+                                  condition_left=self.condition_left,
+                                  condition_right=self.condition_right,
+                                  rewards=self.rewards, model=model)
+            self.params = self.search_parameters(estimator)
+        return self.params
+
+
 if __name__ == '__main__':
-    rp = RealPlayer("/home/jczestochowska/workspace/ZPI/data/AniaPiateklearning.xls")
+    game = GameSession()
+    player = ModelPlayer(game.game_skeleton, 0.1, 0.1)
     model = Qlearning()
-    estimator = Estimator(decisions=rp.data['Action'].tolist(),
-                          condition_left=rp.data['StimulusLeft'].tolist(),
-                          condition_right=rp.data['StimulusRight'].tolist(),
-                          rewards=rp.data['Reward'].tolist(), model=model)
-    print(rp.search_parameters(estimator))
+    print(player.play_game(model))
