@@ -49,7 +49,7 @@ def get_possible_starting_points(model, T_interval=(1, 10, 1), alpha_interval=(0
         alpha_lose = np.arange(*alpha_interval)
         start_points_list = list(product(T_array, alpha_gain, alpha_lose))
     else:
-        alpha_array = np.arange(0.1, 1.0, 0.1)
+        alpha_array = np.arange(*alpha_interval)
         start_points_list = list(product(T_array, alpha_array))
     return start_points_list
 
