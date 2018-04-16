@@ -84,10 +84,3 @@ class Estimator:
 
 def probability_A(Q_A, Q_B, T):
     return 1 / (1 + exp(min((Q_B - Q_A) / T, MAX_EXP)))
-
-
-if __name__ == '__main__':
-    ql = Qlearning()
-    rw = RescorlaWagner()
-    print(ql.update_q_table(game_data={'StimuliLeft': 1, 'StimuliRight': 2, 'Action': 1, 'Reward': -1},
-                            params=[0.1, 0.1, 0.1]))
