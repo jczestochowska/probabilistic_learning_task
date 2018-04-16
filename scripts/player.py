@@ -1,8 +1,8 @@
 from random import random
+
 from pandas import read_excel
 
-from scripts.models import Estimator, probability_A, Qlearning, RescorlaWagner
-from scripts.game_session import GameSession
+from scripts.models import Estimator, probability_A
 
 
 class VirtualPlayer:
@@ -88,11 +88,4 @@ class ModelPlayer(VirtualPlayer, RealPlayer):
                                   condition_right=self.condition_right,
                                   rewards=self.rewards, model=model)
             self.params = self.search_parameters(estimator)
-        return self.params
 
-
-if __name__ == '__main__':
-    game = GameSession()
-    player = ModelPlayer(game.game_skeleton, 0.1, 0.1)
-    model = Qlearning()
-    print(player.play_game(model))

@@ -1,12 +1,9 @@
 import os
 import random
-import numpy as np
 from math import floor
 
+import numpy as np
 import pandas as pd
-
-from models import Qlearning, RescorlaWagner
-from player import VirtualPlayer
 
 
 class GameSession:
@@ -149,11 +146,3 @@ class GameSession:
         filename += ".csv"
         parent_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         return os.path.join(parent_directory, "data", filename)
-
-
-if __name__ == '__main__':
-    game = GameSession()
-    player = VirtualPlayer(game.game_skeleton, 10, 0.1)
-    model = Qlearning()
-    game.play(player=player, model=model)
-    game.save_results()
