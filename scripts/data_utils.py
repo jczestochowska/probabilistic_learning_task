@@ -30,6 +30,18 @@ def save_all_real_players_parameters_to_csv(data_dir_path, new_filename, model, 
                 writer.writerow(row)
 
 
+def get_header(model):
+    if isinstance(model, RescorlaWagner):
+        header = ['name', 'T', 'alpha gain', 'alpha lose']
+    else:
+        header = ['name', 'T', 'alpha']
+    return header
+
+
+def get_optimal_parameters(estimator):
+    return estimator.max_log_likelihood().x
+
+
 def get_optimal_starting_points(estimator):
     optimal_func_value = []
     optimal_params = []
@@ -52,18 +64,6 @@ def get_possible_starting_points(model, T_interval=(1, 10, 1), alpha_interval=(0
         alpha_array = np.arange(*alpha_interval)
         start_points_list = list(product(T_array, alpha_array))
     return start_points_list
-
-
-def get_optimal_parameters(estimator):
-    return estimator.max_log_likelihood().x
-
-
-def get_header(model):
-    if isinstance(model, RescorlaWagner):
-        header = ['name', 'T', 'alpha gain', 'alpha lose']
-    else:
-        header = ['name', 'T', 'alpha']
-    return header
 
 
 if __name__ == '__main__':
