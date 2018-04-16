@@ -2,7 +2,7 @@ from random import random
 
 from pandas import read_excel
 
-from scripts.models import Estimator, probability_A
+from models import Estimator, probability_A
 
 
 class VirtualPlayer:
