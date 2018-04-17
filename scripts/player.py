@@ -1,12 +1,70 @@
+from math import log
 from random import random
 
+import numpy as np
 from pandas import read_excel
+from scipy.optimize import minimize
 
-from scripts.models import Estimator, probability_A, Qlearning, RescorlaWagner
+from scripts.models import probability_A, RescorlaWagner
+
+MAX_EXP = 700
+MIN_LOG = 0.01
 
 
-class VirtualPlayer:
-    def __init__(self, game_skeleton, *params):
+class RealPlayer:
+    def __init__(self, path, model):
+        data = self._read_real_player_excel(path)
+        self.decisions = data['Action'].tolist()
+        self.condition_left = data['StimulusLeft'].tolist()
+        self.condition_right = data['StimulusRight'].tolist()
+        self.rewards = data['Reward'].tolist()
+        self.model = model
+        self.start_points = self._get_default_optimization_start_points()
+
+    @staticmethod
+    def _read_real_player_excel(path):
+        data = read_excel(path, header=None)
+        data = data.T
+        data.columns = data.iloc[0]
+        data = data.reindex(data.index.drop(0))
+        data.drop(['StimulusPair'], axis=1, inplace=True)
+        data.drop(['Response time'], axis=1, inplace=True)
+        data = data[0:90]
+        return data.astype(int)
+
+    def max_log_likelihood(self, start_points=None):
+        if not start_points:
+            start_points = self._get_default_optimization_start_points()
+        return minimize(self.log_likelihood_function, x0=start_points, method='Nelder-Mead')
+
+    def get_optimized_parameters(self):
+        return self.max_log_likelihood().x
+
+    def log_likelihood_function(self, params, sign=-1):
+        T = params[0]
+        log_likelihood = 0
+        for index, decision in enumerate(self.decisions):
+            Q_A = self.model.Q_table[self.condition_left[index] - 1]
+            p_a = probability_A(Q_A, 1 - Q_A, T)
+            game_status = {'StimuliLeft': self.condition_left[index],
+                           'StimuliRight': self.condition_right[index],
+                           'Action': decision,
+                           'Reward': self.rewards[index]}
+            self.model.update_q_table(game_status, params)
+            log_likelihood += sign * (
+                decision * log(max(p_a, MIN_LOG)) + (1 - decision) * log(1 - min(p_a, 1 - MIN_LOG)))
+        return log_likelihood
+
+    def _get_default_optimization_start_points(self):
+        if isinstance(self.model, RescorlaWagner):
+            x0 = np.array([0.1, 0.1, 0.1])
+        else:
+            x0 = np.array([0.1, 0.1])
+        return x0
+
+
+class VirtualPlayer(RealPlayer):
+    def __init__(self, *params, model, game_skeleton):
         # type (DataFrame, Tuple[float|int]) -> None
         self.condition_left = game_skeleton['StimulusLeft']
         self.condition_right = game_skeleton['StimulusRight']
@@ -17,11 +75,12 @@ class VirtualPlayer:
         self.rewards = []
         self.correct_actions = []
         self.params = list(params)
+        self.model = model
 
-    def decide(self, model):
+    def decide(self,):
         T = self.params[0]
         for index, condition_left in enumerate(self.condition_left):
-            self.simulate_game(T, condition_left, index, model)
+            self.simulate_game(T, condition_left, index, self.model)
 
     def simulate_game(self, T, condition_left, index, model):
         left_reward = self.left_rewards[index]
@@ -59,30 +118,10 @@ class VirtualPlayer:
             self.correct_actions.append(0)
 
 
-class RealPlayer:
-    def __init__(self, path):
-        self.data = self._read_real_player_excel(path)
-
-    @staticmethod
-    def _read_real_player_excel(path):
-        data = read_excel(path, header=None)
-        data = data.T
-        data.columns = data.iloc[0]
-        data = data.reindex(data.index.drop(0))
-        data.drop(['StimulusPair'], axis=1, inplace=True)
-        data.drop(['Response time'], axis=1, inplace=True)
-        data = data[0:90]
-        return data.astype(int)
-
-    def search_parameters(self, estimator):
-        return estimator.max_log_likelihood().x
-
-
-if __name__ == '__main__':
-    rp = RealPlayer("/home/jczestochowska/workspace/ZPI/data/AniaPiateklearning.xls")
-    model = Qlearning()
-    estimator = Estimator(decisions=rp.data['Action'].tolist(),
-                          condition_left=rp.data['StimulusLeft'].tolist(),
-                          condition_right=rp.data['StimulusRight'].tolist(),
-                          rewards=rp.data['Reward'].tolist(), model=model)
-    print(rp.search_parameters(estimator))
+class ModelPlayer(VirtualPlayer):
+    def decide(self):
+        T = self.params[0]
+        for index, condition_left in enumerate(self.condition_left):
+            self.simulate_game(T, condition_left, index, self.model)
+            self.get_optimized_parameters()
+            self.params = self.get_optimized_parameters()
