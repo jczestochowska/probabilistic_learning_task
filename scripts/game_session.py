@@ -22,8 +22,8 @@ class GameSession:
         self.RewardsGranted = np.zeros(shape=(2, 90))
         self._create_game_skeleton()
 
-    def play(self, player, model):
-        player.decide(model)
+    def play(self, player):
+        player.decide()
         self.action_history = player.decisions
         self.reward_history = player.rewards
         self.correct_action_history = player.correct_actions

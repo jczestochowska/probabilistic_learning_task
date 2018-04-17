@@ -1,6 +1,4 @@
 from math import exp, log
-from scipy.optimize import minimize
-import numpy as np
 
 MAX_EXP = 700
 MIN_LOG = 0.01
@@ -43,41 +41,6 @@ class RescorlaWagner(Qlearning):
             return alpha_gain
         elif reward == -1:
             return alpha_lose
-
-
-class Estimator:
-    def __init__(self, decisions, condition_left, condition_right, rewards, model):
-        self.decisions = decisions
-        self.rewards = rewards
-        self.condition_left = condition_left
-        self.condition_right = condition_right
-        self.model = model
-
-    def log_likelihood_function(self, params, sign):
-        T = params[0]
-        log_likelihood = 0
-        for index, decision in enumerate(self.decisions):
-            Q_A = self.model.Q_table[self.condition_left[index] - 1]
-            p_a = probability_A(Q_A, 1 - Q_A, T)
-            game_status = {'StimuliLeft': self.condition_left[index],
-                           'StimuliRight': self.condition_right[index],
-                           'Action': decision,
-                           'Reward': self.rewards[index]}
-            self.model.update_q_table(game_status, params)
-            log_likelihood += sign * (
-                decision * log(max(p_a, MIN_LOG)) + (1 - decision) * log(1 - min(p_a, 1 - MIN_LOG)))
-        return log_likelihood
-
-    def max_log_likelihood(self):
-        return minimize(self.log_likelihood_function, x0=self._get_optimization_start_points(), method='Nelder-Mead',
-                        args=(-1.0))
-
-    def _get_optimization_start_points(self):
-        if isinstance(self.model, RescorlaWagner):
-            x0 = np.array([0.1, 0.1, 0.1])
-        else:
-            x0 = np.array([0.1, 0.1])
-        return x0
 
 
 def probability_A(Q_A, Q_B, T):
