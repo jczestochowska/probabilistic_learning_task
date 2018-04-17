@@ -1,9 +1,10 @@
-from scripts.game_session import GameSession
-from scripts.models import Qlearning
-from scripts.player import ModelPlayer
+from game_session import GameSession
+from models import Qlearning
+from player import ModelPlayer
 
 if __name__ == '__main__':
     game = GameSession()
-    player = ModelPlayer(game.game_skeleton, 0.1, 0.1)
     model = Qlearning()
-    print(player.play_game(model))
+    player = ModelPlayer(game.game_skeleton, model, 0.1, 0.1)
+    player.play_game()
+    print(player.params)
