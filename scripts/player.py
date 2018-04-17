@@ -41,11 +41,13 @@ class RealPlayer:
         return self.max_log_likelihood().x
 
     def log_likelihood_function(self, params, sign=-1):
+        self.model.Q_table = self.model.reset_qtable()
         T = params[0]
         log_likelihood = 0
         for index, decision in enumerate(self.decisions):
             Q_A = self.model.Q_table[self.condition_left[index] - 1]
-            p_a = probability_A(Q_A, 1 - Q_A, T)
+            Q_B = self.model.Q_table[self.condition_right[index] - 1]
+            p_a = probability_A(Q_A, Q_B, T)
             game_status = {'StimuliLeft': self.condition_left[index],
                            'StimuliRight': self.condition_right[index],
                            'Action': decision,
