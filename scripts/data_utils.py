@@ -4,8 +4,8 @@ from itertools import product
 
 import numpy as np
 from scipy.optimize import minimize
-from models import RescorlaWagner
-from player import RealPlayer
+from scripts.models import RescorlaWagner
+from scripts.player import RealPlayer
 
 
 def save_all_real_players_parameters_to_csv(data_dir_path, new_filename, model, get_parameters):

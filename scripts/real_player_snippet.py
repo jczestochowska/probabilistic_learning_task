@@ -1,5 +1,5 @@
-from models import Qlearning
-from player import RealPlayer
+from scripts.models import Qlearning
+from scripts.player import RealPlayer
 
 if __name__ == '__main__':
     model = Qlearning()
