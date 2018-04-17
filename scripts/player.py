@@ -19,6 +19,7 @@ class RealPlayer:
         self.condition_right = data['StimulusRight'].tolist()
         self.rewards = data['Reward'].tolist()
         self.model = model
+        self.start_points = self._get_default_optimization_start_points()
 
     @staticmethod
     def _read_real_player_excel(path):
@@ -31,10 +32,15 @@ class RealPlayer:
         data = data[0:90]
         return data.astype(int)
 
-    def search_parameters(self):
+    def max_log_likelihood(self, start_points=None):
+        if not start_points:
+            start_points = self._get_default_optimization_start_points()
+        return minimize(self.log_likelihood_function, x0=start_points, method='Nelder-Mead')
+
+    def get_optimized_parameters(self):
         return self.max_log_likelihood().x
 
-    def log_likelihood_function(self, params, sign):
+    def log_likelihood_function(self, params, sign=-1):
         T = params[0]
         log_likelihood = 0
         for index, decision in enumerate(self.decisions):
@@ -49,11 +55,7 @@ class RealPlayer:
                 decision * log(max(p_a, MIN_LOG)) + (1 - decision) * log(1 - min(p_a, 1 - MIN_LOG)))
         return log_likelihood
 
-    def max_log_likelihood(self):
-        return minimize(self.log_likelihood_function, x0=self._get_optimization_start_points(), method='Nelder-Mead',
-                        args=(-1.0))
-
-    def _get_optimization_start_points(self):
+    def _get_default_optimization_start_points(self):
         if isinstance(self.model, RescorlaWagner):
             x0 = np.array([0.1, 0.1, 0.1])
         else:
@@ -62,7 +64,7 @@ class RealPlayer:
 
 
 class VirtualPlayer(RealPlayer):
-    def __init__(self, game_skeleton, model, *params):
+    def __init__(self, *params, model, game_skeleton):
         # type (DataFrame, Tuple[float|int]) -> None
         self.condition_left = game_skeleton['StimulusLeft']
         self.condition_right = game_skeleton['StimulusRight']
@@ -75,10 +77,10 @@ class VirtualPlayer(RealPlayer):
         self.params = list(params)
         self.model = model
 
-    def decide(self, model):
+    def decide(self,):
         T = self.params[0]
         for index, condition_left in enumerate(self.condition_left):
-            self.simulate_game(T, condition_left, index, model)
+            self.simulate_game(T, condition_left, index, self.model)
 
     def simulate_game(self, T, condition_left, index, model):
         left_reward = self.left_rewards[index]
@@ -117,10 +119,9 @@ class VirtualPlayer(RealPlayer):
 
 
 class ModelPlayer(VirtualPlayer):
-    def play_game(self):
+    def decide(self):
         T = self.params[0]
         for index, condition_left in enumerate(self.condition_left):
             self.simulate_game(T, condition_left, index, self.model)
-            self.search_parameters()
-            self.params = self.search_parameters()
-
+            self.get_optimized_parameters()
+            self.params = self.get_optimized_parameters()
