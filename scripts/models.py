@@ -23,6 +23,9 @@ class Qlearning:
             self.Q_table[right_card - 1] = self.Q_table[right_card - 1] + alpha * (
                 current_reward - self.Q_table[right_card - 1])
 
+    def reset_qtable(self):
+        return [q*0 for q in self.Q_table]
+
 
 class RescorlaWagner(Qlearning):
     def update_q_table(self, game_data, params):
@@ -44,4 +47,8 @@ class RescorlaWagner(Qlearning):
 
 
 def probability_A(Q_A, Q_B, T):
-    return 1 / (1 + exp(min((Q_B - Q_A) / T, MAX_EXP)))
+    if T == 0 or (1 + exp(min((Q_B - Q_A) / T, MAX_EXP))) == 0:
+        probability = 0
+    else:
+        probability = 1 / (1 + exp(min((Q_B - Q_A) / T, MAX_EXP)))
+    return probability
