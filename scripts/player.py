@@ -5,7 +5,7 @@ import numpy as np
 from pandas import read_excel
 from scipy.optimize import minimize
 
-from models import probability_A, RescorlaWagner
+from scripts.models import probability_A, RescorlaWagner
 
 MAX_EXP = 700
 MIN_LOG = 0.01

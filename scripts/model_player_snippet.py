@@ -1,6 +1,6 @@
 from game_session import GameSession
-from models import Qlearning
-from player import ModelPlayer
+from scripts.models import Qlearning
+from scripts.player import ModelPlayer
 
 if __name__ == '__main__':
     game = GameSession()

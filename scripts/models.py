@@ -1,4 +1,4 @@
-from math import exp, log
+from math import exp
 
 MAX_EXP = 700
 MIN_LOG = 0.01
