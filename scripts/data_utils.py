@@ -1,14 +1,14 @@
 import csv
 import os
 
-from models import RescorlaWagner
+from models import RescorlaWagner, Qlearning
 from player import Estimator, RealPlayer
 
 
 def save_all_real_players_parameters_to_csv(data_dir_path, new_filename, model):
     all_filenames = os.listdir(data_dir_path)
     with open('{}.csv'.format(new_filename), 'w') as file:
-        writer = csv.writer(file, delimiter=';')
+        writer = csv.writer(file, delimiter=',')
         writer.writerow(get_header(model))
         for filename in all_filenames:
             if filename.endswith('xls'):
@@ -35,6 +35,7 @@ def get_header(model):
 
 
 if __name__ == '__main__':
-    rl = RescorlaWagner()
-    save_all_real_players_parameters_to_csv("/home/jczestochowska/workspace/ZPI/data/",
-                                            'tes_params', rl)
+    #rl = RescorlaWagner()
+    ql = Qlearning()
+    save_all_real_players_parameters_to_csv('/Users/karola/PycharmProjects/ZPI/data',
+                                            'new_real_player_params_ql', ql)
