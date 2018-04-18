@@ -18,13 +18,10 @@ class Qlearning:
         current_reward = game_data['Reward']
         if decision == 1:
             self.Q_table[left_card - 1] = self.Q_table[left_card - 1] + alpha * (
-                current_reward - self.Q_table[left_card - 1])
+                    current_reward - self.Q_table[left_card - 1])
         elif decision == 0:
             self.Q_table[right_card - 1] = self.Q_table[right_card - 1] + alpha * (
-                current_reward - self.Q_table[right_card - 1])
-
-    def reset_qtable(self):
-        return [q*0 for q in self.Q_table]
+                    current_reward - self.Q_table[right_card - 1])
 
 
 class RescorlaWagner(Qlearning):
