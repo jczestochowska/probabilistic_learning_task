@@ -41,7 +41,6 @@ class RealPlayer:
         return self.max_log_likelihood().x
 
     def log_likelihood_function(self, params, sign=-1):
-        self.model.Q_table = self.model.reset_qtable()
         T = params[0]
         log_likelihood = 0
         for index, decision in enumerate(self.decisions):
@@ -59,9 +58,9 @@ class RealPlayer:
 
     def _get_default_optimization_start_points(self):
         if isinstance(self.model, RescorlaWagner):
-            x0 = np.array([0.1, 0.1, 0.1])
+            x0 = np.array([1, 0.1, 0.1])
         else:
-            x0 = np.array([0.1, 0.1])
+            x0 = np.array([1, 0.1])
         return x0
 
 
