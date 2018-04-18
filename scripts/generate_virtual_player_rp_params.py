@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 
-from player import VirtualPlayer
+from scripts.player import VirtualPlayer
 from game_session import GameSession
 from models import RescorlaWagner, Qlearning
 
@@ -18,10 +18,10 @@ if __name__=='__main__':
         T = float(row['T'])
         alpha = float(row['alpha'])
         game = GameSession()
-        player = VirtualPlayer(game.game_skeleton, row['T'], row['alpha'])
         model = Qlearning()
-        game.play(player=player, model=model)
+        player = VirtualPlayer(row['T'], row['alpha'], game_skeleton=game.game_skeleton, model=model)
+        game.play(player=player)
         game._create_result()
         file = tuple(map(str, row))
-        path = _create_file_path(filename="QL"+",".join(file))
+        path = _create_file_path(filename="QL"+"_".join(file))
         game.result.to_csv(path, index=False)
