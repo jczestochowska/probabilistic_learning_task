@@ -12,7 +12,7 @@ def save_all_real_players_parameters_to_csv(data_dir_path, new_filename, model, 
     # type (str, str, Qlearning, function) -> None
     all_filenames = os.listdir(data_dir_path)
     with open('{}.csv'.format(new_filename), 'w') as file:
-        writer = csv.writer(file, delimiter=';')
+        writer = csv.writer(file, delimiter=',')
         writer.writerow(get_header(model))
         for filename in all_filenames:
             if filename.endswith('xls'):
