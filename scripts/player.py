@@ -45,7 +45,8 @@ class RealPlayer:
         log_likelihood = 0
         for index, decision in enumerate(self.decisions):
             Q_A = self.model.Q_table[self.condition_left[index] - 1]
-            p_a = probability_A(Q_A, 1 - Q_A, T)
+            Q_B = self.model.Q_table[self.condition_right[index] - 1]
+            p_a = probability_A(Q_A, Q_B, T)
             game_status = {'StimuliLeft': self.condition_left[index],
                            'StimuliRight': self.condition_right[index],
                            'Action': decision,
@@ -57,9 +58,9 @@ class RealPlayer:
 
     def _get_default_optimization_start_points(self):
         if isinstance(self.model, RescorlaWagner):
-            x0 = np.array([0.1, 0.1, 0.1])
+            x0 = np.array([1, 0.1, 0.1])
         else:
-            x0 = np.array([0.1, 0.1])
+            x0 = np.array([1, 0.1])
         return x0
 
 
