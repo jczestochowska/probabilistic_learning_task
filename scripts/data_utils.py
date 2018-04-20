@@ -19,9 +19,10 @@ def save_all_real_players_parameters_to_csv(data_dir_path, new_filename, model, 
                 row = []
                 rp = RealPlayer(os.path.join(data_dir_path, filename), get_model(model))
                 name = os.path.splitext(os.path.basename(filename))[0][:-8]
-                player_parameters = get_parameters(real_player=rp)
+                player_parameters, starting_points = get_parameters(real_player=rp)
                 row.append(name)
                 row.extend(player_parameters)
+                row.extend(starting_points)
                 writer.writerow(row)
 
 
@@ -35,9 +36,9 @@ def get_model(model):
 
 def get_header(model):
     if isinstance(model, RescorlaWagner):
-        header = ['name', 'T', 'alpha gain', 'alpha lose']
+        header = ['name', 'T', 'alpha gain', 'alpha lose', 'start points']
     else:
-        header = ['name', 'T', 'alpha']
+        header = ['name', 'T', 'alpha', 'start points']
     return header
 
 
@@ -45,7 +46,7 @@ def get_optimal_parameters(real_player):
     return real_player.get_optimized_parameters()
 
 
-def get_optimal_starting_points(real_player):
+def get_optimal_parameters_and_starting_points(real_player):
     optimal_func_value = []
     optimal_params = []
     for start_points in get_possible_starting_points(real_player.model):
@@ -54,10 +55,11 @@ def get_optimal_starting_points(real_player):
         optimal_func_value.append(max_loglikelihood.fun)
         optimal_params.append(max_loglikelihood.x)
     max_value_index = optimal_func_value.index(min(optimal_func_value))
-    return optimal_params[max_value_index]
+    optimal_starting_points = get_possible_starting_points(real_player.model)[max_value_index]
+    return optimal_params[max_value_index], optimal_starting_points
 
 
-def get_possible_starting_points(model, T_interval=(1, 10, 1), alpha_interval=(0.1, 1, 0.1)):
+def get_possible_starting_points(model, T_interval=(1, 10, 0.5), alpha_interval=(0.01, 1, 0.05)):
     T_array = np.arange(*T_interval)
     if isinstance(model, RescorlaWagner):
         alpha_gain = np.arange(*alpha_interval)
