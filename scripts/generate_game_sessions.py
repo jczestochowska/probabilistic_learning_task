@@ -10,8 +10,14 @@ from data_utils import round_number, make_directory
 
 
 def _create_file_path(filename):
-    directory = '/Users/karola/PycharmProjects/ZPI/data/virtual_players'
-    return os.path.join(directory, filename)
+    path = _create_path()
+    return os.path.join(path, filename)
+
+
+def _create_path():
+    parent_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    path = os.path.join(os.path.join(parent_directory, 'data'), 'virtual_players')
+    return path
 
 
 def prepare_params():
@@ -23,38 +29,32 @@ def prepare_params():
 
 
 def generate_game_sessions_with_real_player_parameters():
-    make_directory(directory='/Users/karola/PycharmProjects/ZPI/data/virtual_players')
+    path = _create_path()
+    make_directory(directory=path)
     df = pd.read_csv('/Users/karola/PycharmProjects/ZPI/scripts/new_real_player_params_ql.csv')
     for index, row in df.iterrows():
         game = GameSession()
         model = Qlearning()
-        # model = RescorlaWagner()
         player = VirtualPlayer(row['T'], row['alpha'], game_skeleton=game.game_skeleton, model=model)
-        # player = VirtualPlayer(row['T'], row['alpha_gain'], row['alpha_lose'], game_skeleton=game.game_skeleton, model=model)
         game.play(player=player)
         game._create_result()
         file = tuple(map(str, (round_number(row['T']), round_number(row['alpha']), row['name'])))
-        # file = tuple(map(str, (round_number(row['T']), round_number(row['alpha_gain'], round_number(row['alpha_lose']), row['name'])))
         path = _create_file_path(filename="QL_" + "_".join(file))
-        # path = _create_file_path(filename="RW_"+"_".join(file))
         game.result.to_csv(path, index=False)
 
 
 def generate_game_sessions_with_all_parameters():
-    make_directory(directory='/Users/karola/PycharmProjects/ZPI/data/virtual_players')
+    path = _create_path()
+    make_directory(directory=path)
     params_ql, params_rl = prepare_params()
     for trial in params_ql:
         game = GameSession()
         model = Qlearning()
-        # model = RescorlaWagner()
         player = VirtualPlayer(trial[0], trial[1], game_skeleton=game.game_skeleton, model=model)
-        # player = VirtualPlayer(trial[0], trial[1], trial[2], game_skeleton=game.game_skeleton, model=model)
         game.play(player=player)
         game._create_result()
         file = tuple(map(str, round_number(trial[0]), round_number(trial[1])))
-        # file = tuple(map(str, round_number(trial[0]), round_number(trial[1]), round_number(trial[2])))
         path = _create_file_path(filename="QL_" + "_".join(file))
-        # path = _create_file_path(filename="RW_"+"_".join(file))
         game.result.to_csv(path, index=False)
 
 
