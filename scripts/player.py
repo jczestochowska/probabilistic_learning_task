@@ -5,7 +5,7 @@ import numpy as np
 from pandas import read_excel
 from scipy.optimize import minimize
 
-from scripts.models import probability_A, RescorlaWagner
+from models import probability_A, RescorlaWagner
 
 MAX_EXP = 700
 MIN_LOG = 0.01
@@ -66,7 +66,7 @@ class RealPlayer:
 
 class VirtualPlayer(RealPlayer):
     def __init__(self, *params, model, game_skeleton):
-        # type (DataFrame, Tuple[float|int]) -> None
+        # type (Tuple[float|int], Qlearning, DataFrame) -> None
         self.condition_left = game_skeleton['StimulusLeft']
         self.condition_right = game_skeleton['StimulusRight']
         self.left_rewards = game_skeleton['LeftReward']
