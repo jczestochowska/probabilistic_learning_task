@@ -20,9 +20,11 @@ def save_all_real_players_parameters_to_csv(data_dir_path, new_filename, model, 
                 rp = RealPlayer(os.path.join(data_dir_path, filename), get_model(model))
                 name = os.path.splitext(os.path.basename(filename))[0][:-8]
                 player_parameters, starting_points = get_parameters(real_player=rp)
+                criteria = rp.model_selection()
                 row.append(name)
                 row.extend(player_parameters)
                 row.extend(starting_points)
+                row.extend(criteria)
                 writer.writerow(row)
 
 
@@ -36,9 +38,9 @@ def get_model(model):
 
 def get_header(model):
     if isinstance(model, RescorlaWagner):
-        header = ['name', 'T', 'alpha gain', 'alpha lose', 'start points']
+        header = ['name', 'T', 'alpha gain', 'alpha lose', 'T0', 'alpha0', 'LLE', 'AIC', 'pR2']
     else:
-        header = ['name', 'T', 'alpha', 'start points']
+        header = ['name', 'T', 'alpha', 'T0', 'alpha0', 'LLE', 'AIC', 'pR2']
     return header
 
 
@@ -59,7 +61,7 @@ def get_optimal_parameters_and_starting_points(real_player):
     return optimal_params[max_value_index], optimal_starting_points
 
 
-def get_possible_starting_points(model, T_interval=(1, 10, 0.5), alpha_interval=(0.01, 1, 0.05)):
+def get_possible_starting_points(model, T_interval=(1, 10, 0.1), alpha_interval=(0.1, 1, 0.05)):
     T_array = np.arange(*T_interval)
     if isinstance(model, RescorlaWagner):
         alpha_gain = np.arange(*alpha_interval)

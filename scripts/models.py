@@ -52,11 +52,9 @@ def AIC(model, max_loglikelihood_value):
     return abs(2 * q - 2 * max_loglikelihood_value)
 
 
-def pseudoR_squared(max_loglikelihood_value, session_length, likelihood_null):
+def pseudoR_squared(max_loglikelihood_value, session_length):
     r = log(0.5) * session_length
-    dr_drapaly = abs((max_loglikelihood_value - r) / r)
-    z_internetu = max_loglikelihood_value / likelihood_null
-    return dr_drapaly
+    return abs((max_loglikelihood_value - r) / r)
 
 
 def parameters_number(model):

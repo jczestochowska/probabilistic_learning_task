@@ -67,16 +67,8 @@ class RealPlayer:
     def model_selection(self):
         loglikelihood_value = self.max_log_likelihood().fun * (-1)
         AIC_value = AIC(model=self.model, max_loglikelihood_value=loglikelihood_value)
-        pR2 = pseudoR_squared(max_loglikelihood_value=loglikelihood_value, session_length=len(self.decisions),
-                              likelihood_null=self.loglikelihood_null())
-        return {'LogLikelihood': loglikelihood_value, 'AIC': AIC_value, 'pseudoR-quadratic': pR2}
-
-    def loglikelihood_null(self):
-        p_a = self.probability_A_null()
-        return log(p_a ** sum(self.decisions) * (1 - p_a) ** (len(self.decisions) - sum(self.decisions)))
-
-    def probability_A_null(self):
-        return sum(self.decisions) / len(self.decisions)
+        pR2 = pseudoR_squared(max_loglikelihood_value=loglikelihood_value, session_length=len(self.decisions))
+        return [loglikelihood_value, AIC_value, pR2]
 
 
 class VirtualPlayer(RealPlayer):
