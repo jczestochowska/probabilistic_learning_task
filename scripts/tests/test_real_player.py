@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -8,7 +9,7 @@ from numpy.testing import assert_array_equal
 from models import Qlearning, RescorlaWagner
 from player import RealPlayer
 
-TEST_DATA_PATH = "/home/jczestochowska/workspace/ZPI/scripts/tests/example_excel_data.xls"
+TEST_DATA_PATH = TEST_DATA_PATH = os.path.dirname(os.path.abspath(__file__)) + "/example_excel_data.xls"
 
 
 class TestRealPlayer(TestCase):
