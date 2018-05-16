@@ -1,11 +1,12 @@
 from unittest import TestCase
 
 import numpy as np
+import os
 
 from models import RescorlaWagner, Qlearning
 from player import RealPlayer
 
-TEST_DATA_PATH = "/home/jczestochowska/workspace/ZPI/scripts/tests/example_excel_data.xls"
+TEST_DATA_PATH = os.path.dirname(os.path.abspath(__file__)) + "/example_excel_data.xls"
 
 
 class TestQlearning(TestCase):
