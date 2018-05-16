@@ -1,3 +1,4 @@
+from copy import copy
 from math import exp
 
 MAX_EXP = 700
@@ -29,8 +30,9 @@ class RescorlaWagner(Qlearning):
         # type (Dict[str, int], List[int]) -> None
         reward = game_data['Reward']
         alpha = self._choose_alpha(params, reward)
-        params[-1] = alpha
-        super().update_q_table(game_data, params)
+        parameters = copy(params)
+        parameters[-1] = alpha
+        super().update_q_table(game_data, parameters)
 
     @staticmethod
     def _choose_alpha(params, reward):
