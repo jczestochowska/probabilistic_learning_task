@@ -1,5 +1,7 @@
 from unittest import TestCase
 
+import numpy as np
+
 from models import RescorlaWagner, Qlearning
 from player import RealPlayer
 
