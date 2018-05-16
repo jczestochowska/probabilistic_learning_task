@@ -87,7 +87,8 @@ class VirtualPlayer(RealPlayer):
         right_reward = self.right_rewards[index]
         condition_right = self.condition_right[index]
         Q_A = model.Q_table[condition_left - 1]
-        p_a = probability_A(Q_A, 1 - Q_A, T)
+        Q_B = model.Q_table[condition_right - 1]
+        p_a = probability_A(Q_A, Q_B, T)
         decision = self._check_threshold(p_a)
         self._is_action_correct(decision, index)
         self.decisions.append(decision)
