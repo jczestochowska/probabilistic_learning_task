@@ -5,7 +5,7 @@ import numpy as np
 from pandas import read_excel
 from scipy.optimize import minimize
 
-from scripts.models import probability_A, RescorlaWagner
+from models import probability_A, RescorlaWagner
 
 MAX_EXP = 700
 MIN_LOG = 0.01
@@ -66,7 +66,7 @@ class RealPlayer:
 
 class VirtualPlayer(RealPlayer):
     def __init__(self, *params, model, game_skeleton):
-        # type (DataFrame, Tuple[float|int]) -> None
+        # type (Tuple[float|int], Qlearning, DataFrame) -> None
         self.condition_left = game_skeleton['StimulusLeft']
         self.condition_right = game_skeleton['StimulusRight']
         self.left_rewards = game_skeleton['LeftReward']
@@ -78,7 +78,7 @@ class VirtualPlayer(RealPlayer):
         self.params = list(params)
         self.model = model
 
-    def decide(self,):
+    def decide(self):
         T = self.params[0]
         for index, condition_left in enumerate(self.condition_left):
             self.simulate_game(T, condition_left, index, self.model)
@@ -88,7 +88,8 @@ class VirtualPlayer(RealPlayer):
         right_reward = self.right_rewards[index]
         condition_right = self.condition_right[index]
         Q_A = model.Q_table[condition_left - 1]
-        p_a = probability_A(Q_A, 1 - Q_A, T)
+        Q_B = model.Q_table[condition_right - 1]
+        p_a = probability_A(Q_A, Q_B, T)
         decision = self._check_threshold(p_a)
         self._is_action_correct(decision, index)
         self.decisions.append(decision)
@@ -124,5 +125,4 @@ class ModelPlayer(VirtualPlayer):
         T = self.params[0]
         for index, condition_left in enumerate(self.condition_left):
             self.simulate_game(T, condition_left, index, self.model)
-            self.get_optimized_parameters()
             self.params = self.get_optimized_parameters()
