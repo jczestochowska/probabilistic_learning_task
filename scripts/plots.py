@@ -1,6 +1,8 @@
 from scripts.game_session import GameSession
 from scripts.models import Qlearning
 from scripts.player import RealPlayer, VirtualPlayer
+from scripts.data_utils import make_directory
+from scripts.generate_game_sessions import _create_path, _create_file_path
 
 import matplotlib
 
@@ -45,6 +47,10 @@ if __name__ == '__main__':
     for file in os.listdir(directory):
         if file.endswith('.xls'):
             dir = os.path.join(directory, file)
+            path = _create_path(dir='plots')
+            print(path)
+            make_directory(path)
             make_plot(dir)
-
-            plt.savefig(directory + "".join(file) + ".png")
+            plot_path = os.path.join(path, "".join(file) + ".png")
+            print(plot_path)
+            plt.savefig(plot_path)
