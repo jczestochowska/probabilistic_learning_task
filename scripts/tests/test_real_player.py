@@ -6,10 +6,10 @@ import numpy as np
 import pandas as pd
 from numpy.testing import assert_array_equal
 
-from models import Qlearning, RescorlaWagner
-from player import RealPlayer
+from scripts.models import Qlearning, RescorlaWagner
+from scripts.player import RealPlayer
 
-TEST_DATA_PATH = TEST_DATA_PATH = os.path.dirname(os.path.abspath(__file__)) + "/example_excel_data.xls"
+TEST_DATA_PATH = os.path.dirname(os.path.abspath(__file__)) + "/example_excel_data.xls"
 
 
 class TestRealPlayer(TestCase):

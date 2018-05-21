@@ -5,7 +5,7 @@ import numpy as np
 from pandas import read_excel
 from scipy.optimize import minimize
 
-from models import probability_A, RescorlaWagner
+from scripts.models import probability_A, AIC, pseudoR_squared, RescorlaWagner
 
 MAX_EXP = 700
 MIN_LOG = 0.01
@@ -41,6 +41,7 @@ class RealPlayer:
         return self.max_log_likelihood().x
 
     def log_likelihood_function(self, params, sign=-1):
+        self.model.Q_table = self.model.reset_qtable()
         T = params[0]
         log_likelihood = 0
         for index, decision in enumerate(self.decisions):
@@ -63,10 +64,16 @@ class RealPlayer:
             x0 = np.array([1, 0.1])
         return x0
 
+    def model_selection(self):
+        loglikelihood_value = self.max_log_likelihood().fun * (-1)
+        AIC_value = AIC(model=self.model, max_loglikelihood_value=loglikelihood_value)
+        pR2 = pseudoR_squared(max_loglikelihood_value=loglikelihood_value, session_length=len(self.decisions))
+        return [loglikelihood_value, AIC_value, pR2]
+
 
 class VirtualPlayer(RealPlayer):
     def __init__(self, *params, model, game_skeleton):
-        # type (Tuple[float|int], Qlearning, DataFrame) -> None
+        # type (DataFrame, Tuple[float|int]) -> None
         self.condition_left = game_skeleton['StimulusLeft']
         self.condition_right = game_skeleton['StimulusRight']
         self.left_rewards = game_skeleton['LeftReward']
@@ -125,4 +132,5 @@ class ModelPlayer(VirtualPlayer):
         T = self.params[0]
         for index, condition_left in enumerate(self.condition_left):
             self.simulate_game(T, condition_left, index, self.model)
+            self.get_optimized_parameters()
             self.params = self.get_optimized_parameters()
