@@ -1,8 +1,8 @@
 from unittest import TestCase, mock
 from unittest.mock import patch, call
 
-from models import Qlearning
-from player import VirtualPlayer
+from scripts.models import Qlearning
+from scripts.player import VirtualPlayer
 import pandas as pd
 
 

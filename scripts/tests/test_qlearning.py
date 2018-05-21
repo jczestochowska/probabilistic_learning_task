@@ -3,8 +3,8 @@ from unittest import TestCase
 
 import numpy as np
 
-from models import RescorlaWagner, Qlearning
-from player import RealPlayer
+from scripts.models import RescorlaWagner, Qlearning
+from scripts.player import RealPlayer
 
 TEST_DATA_PATH = os.path.dirname(os.path.abspath(__file__)) + "/example_excel_data.xls"
 
