@@ -1,4 +1,4 @@
-from game_session import GameSession
+from scripts.game_session import GameSession
 from scripts.models import Qlearning
 from scripts.player import VirtualPlayer
 
