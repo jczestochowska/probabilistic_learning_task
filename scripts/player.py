@@ -5,7 +5,7 @@ import numpy as np
 from pandas import read_excel
 from scipy.optimize import minimize
 
-from scripts.models import probability_A, RescorlaWagner
+from scripts.models import probability_A, AIC, pseudoR_squared, RescorlaWagner
 
 MAX_EXP = 700
 MIN_LOG = 0.01
@@ -41,11 +41,13 @@ class RealPlayer:
         return self.max_log_likelihood().x
 
     def log_likelihood_function(self, params, sign=-1):
+        self.model.Q_table = self.model.reset_qtable()
         T = params[0]
         log_likelihood = 0
         for index, decision in enumerate(self.decisions):
             Q_A = self.model.Q_table[self.condition_left[index] - 1]
-            p_a = probability_A(Q_A, 1 - Q_A, T)
+            Q_B = self.model.Q_table[self.condition_right[index] - 1]
+            p_a = probability_A(Q_A, Q_B, T)
             game_status = {'StimuliLeft': self.condition_left[index],
                            'StimuliRight': self.condition_right[index],
                            'Action': decision,
@@ -57,10 +59,16 @@ class RealPlayer:
 
     def _get_default_optimization_start_points(self):
         if isinstance(self.model, RescorlaWagner):
-            x0 = np.array([0.1, 0.1, 0.1])
+            x0 = np.array([1, 0.1, 0.1])
         else:
-            x0 = np.array([0.1, 0.1])
+            x0 = np.array([1, 0.1])
         return x0
+
+    def model_selection(self):
+        loglikelihood_value = self.max_log_likelihood().fun * (-1)
+        AIC_value = AIC(model=self.model, max_loglikelihood_value=loglikelihood_value)
+        pR2 = pseudoR_squared(max_loglikelihood_value=loglikelihood_value, session_length=len(self.decisions))
+        return [loglikelihood_value, AIC_value, pR2]
 
 
 class VirtualPlayer(RealPlayer):
@@ -77,7 +85,7 @@ class VirtualPlayer(RealPlayer):
         self.params = list(params)
         self.model = model
 
-    def decide(self,):
+    def decide(self):
         T = self.params[0]
         for index, condition_left in enumerate(self.condition_left):
             self.simulate_game(T, condition_left, index, self.model)

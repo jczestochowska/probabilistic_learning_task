@@ -1,4 +1,4 @@
-from math import exp
+from math import exp, log
 
 MAX_EXP = 700
 MIN_LOG = 0.01
@@ -23,25 +23,43 @@ class Qlearning:
             self.Q_table[right_card - 1] = self.Q_table[right_card - 1] + alpha * (
                 current_reward - self.Q_table[right_card - 1])
 
+    def reset_qtable(self):
+        return [q * 0 for q in self.Q_table]
+
 
 class RescorlaWagner(Qlearning):
     def update_q_table(self, game_data, params):
         # type (Dict[str, int], List[int]) -> None
         reward = game_data['Reward']
-        alpha = self._choose_alpha(params, reward)
-        params[-1] = alpha
-        super().update_q_table(game_data, params)
-
-    @staticmethod
-    def _choose_alpha(params, reward):
-        # type (List[int], int) -> int
-        alpha_gain = params[1]
-        alpha_lose = params[2]
+        T, alpha_gain, alpha_lose = params
         if reward == 1:
-            return alpha_gain
+            params_to_qtable = (T, alpha_gain)
         elif reward == -1:
-            return alpha_lose
+            params_to_qtable = (T, alpha_lose)
+        super().update_q_table(game_data, params_to_qtable)
 
 
 def probability_A(Q_A, Q_B, T):
-    return 1 / (1 + exp(min((Q_B - Q_A) / T, MAX_EXP)))
+    if T == 0 or (1 + exp(min((Q_B - Q_A) / T, MAX_EXP))) == 0:
+        probability = 0
+    else:
+        probability = 1 / (1 + exp(min((Q_B - Q_A) / T, MAX_EXP)))
+    return probability
+
+
+def AIC(model, max_loglikelihood_value):
+    q = parameters_number(model)
+    return abs(2 * q - 2 * max_loglikelihood_value)
+
+
+def pseudoR_squared(max_loglikelihood_value, session_length):
+    r = log(0.5) * session_length
+    return abs((max_loglikelihood_value - r) / r)
+
+
+def parameters_number(model):
+    if isinstance(model, RescorlaWagner):
+        params_number = 3
+    else:
+        params_number = 2
+    return params_number
