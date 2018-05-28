@@ -12,7 +12,7 @@ def save_all_real_players_parameters_to_csv(data_dir_path, new_filename, model, 
     # type (str, str, Qlearning, function) -> None
     all_filenames = os.listdir(data_dir_path)
     with open('{}.csv'.format(new_filename), 'w') as file:
-        writer = csv.writer(file, delimiter=';')
+        writer = csv.writer(file, delimiter=',')
         writer.writerow(get_header(model))
         for filename in all_filenames:
             if filename.endswith('xls'):
@@ -71,3 +71,12 @@ def get_possible_starting_points(model, T_interval=(1, 10, 0.1), alpha_interval=
         alpha_array = np.arange(*alpha_interval)
         start_points_list = list(product(T_array, alpha_array))
     return start_points_list
+
+
+def make_directory(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+
+def round_number(number):
+    return round(number, 2)

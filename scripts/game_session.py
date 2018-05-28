@@ -128,9 +128,11 @@ class GameSession:
 
         return left_rewards, right_rewards
 
-    def save_results(self):
+    def save_results(self, path):
+        if not path:
+            path = self._create_file_path()
         self._create_result()
-        self.result.to_csv(self._create_file_path(), index=False)
+        self.result.to_csv(path, index=False)
 
     def _create_result(self):
         self.reward_history = list(map(int, self.reward_history))
